@@ -1,0 +1,13 @@
+@import "tailwindcss";
+
+:root {
+  --color-fuchsia-primary: #BF0B57;
+  --color-pink-accent: #E0407D;
+  --color-purple-secondary: #69377D;
+  --color-lavender-white: #EAE5EC;
+  --color-carbon-black: #120F13;
+}
+
+body {
+  font-family: 'Montserrat', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+}

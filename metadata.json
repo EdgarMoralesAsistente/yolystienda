@@ -1,0 +1,6 @@
+{
+  "name": "Yoly · Belleza & Negocio | L'Bel, Ésika y Cyzone",
+  "description": "Landing page oficial de Yoly para la feria de emprendimiento: compra tus productos favoritos de L'Bel, Ésika y Cyzone o únete al equipo de ventas para generar ingresos extra.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
