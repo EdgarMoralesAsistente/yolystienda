@@ -9,8 +9,8 @@ interface FooterProps {
 
 export const Footer: React.FC<FooterProps> = ({ onOpenLeadsModal, onGoToAdmin, leadsCount }) => {
   return (
-    <footer className="bg-white border-t border-[#EAE5EC] pt-12 pb-14 text-slate-600 text-xs">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <footer className="bg-white border-t border-[#EAE5EC] pt-10 pb-12 text-slate-600 text-xs w-full max-w-full overflow-hidden">
+      <div className="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 w-full">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8 pb-10 border-b border-slate-100">
           {/* Brand Col */}
           <div className="md:col-span-5 space-y-3">

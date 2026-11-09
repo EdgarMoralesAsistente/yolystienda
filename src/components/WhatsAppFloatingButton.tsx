@@ -7,7 +7,7 @@ export const WhatsAppFloatingButton: React.FC = () => {
   );
 
   return (
-    <aside aria-label="Contacto rápido" className="fixed bottom-5 right-5 z-40">
+    <aside aria-label="Contacto rápido" className="fixed bottom-4 right-4 sm:bottom-5 sm:right-5 z-40">
       <a
         href={`https://wa.me/?text=${defaultMessage}`}
         target="_blank"

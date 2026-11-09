@@ -319,7 +319,7 @@ export default function App() {
 
   // Otherwise: Public Direct Landing View (with very little scroll)
   return (
-    <div className="min-h-screen flex flex-col bg-[#FAF8FB] text-[#120F13] font-['Montserrat',sans-serif]">
+    <div className="min-h-screen flex flex-col bg-[#FAF8FB] text-[#120F13] font-['Montserrat',sans-serif] w-full max-w-full overflow-x-hidden">
       {/* Top Navbar */}
       <Navbar
         onScrollToForm={(interest) => scrollToForm(interest || 'comprar')}
@@ -330,7 +330,7 @@ export default function App() {
       />
 
       {/* Main Content: Ultra-direct with very little scroll */}
-      <main className="flex-1">
+      <main className="flex-1 w-full max-w-full overflow-x-hidden">
         {/* 1. Hero Section with authentic flyer */}
         <Hero
           onScrollToForm={(interest) => scrollToForm(interest || 'comprar')}

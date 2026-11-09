@@ -121,14 +121,14 @@ export const LeadCaptureForm: React.FC<LeadCaptureFormProps> = ({
   };
 
   return (
-    <section id="contacto" className="pt-2 pb-10 md:pt-4 md:pb-14 bg-[#FAF8FB]">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center max-w-2xl mx-auto mb-6">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#EAE5EC] text-[#69377D] text-xs font-semibold mb-2">
+    <section id="contacto" className="pt-2 pb-10 md:pt-4 md:pb-14 bg-[#FAF8FB] w-full max-w-full overflow-hidden">
+      <div className="max-w-4xl mx-auto px-3.5 sm:px-6 lg:px-8 w-full">
+        <div className="text-center max-w-2xl mx-auto mb-5 sm:mb-6">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#EAE5EC] text-[#69377D] text-[11px] sm:text-xs font-semibold mb-2">
             <Sparkles className="w-3.5 h-3.5 text-[#BF0B57]" />
             Formulario Oficial de la Feria
           </div>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-[#120F13] tracking-tight">
+          <h2 className="text-xl sm:text-3xl font-extrabold text-[#120F13] tracking-tight">
             Déjanos tus datos
           </h2>
           <p className="mt-1 text-xs sm:text-sm text-slate-600">
@@ -136,7 +136,7 @@ export const LeadCaptureForm: React.FC<LeadCaptureFormProps> = ({
           </p>
         </div>
 
-        <div className="bg-white rounded-3xl p-6 sm:p-10 border border-[#EAE5EC] shadow-md">
+        <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-8 border border-[#EAE5EC] shadow-md w-full max-w-full overflow-hidden">
           {isSubmitted && submittedLead ? (
             /* Success confirmation screen */
             <div className="text-center py-6 space-y-6 animate-in fade-in duration-300">

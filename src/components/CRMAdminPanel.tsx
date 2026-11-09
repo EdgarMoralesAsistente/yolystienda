@@ -157,95 +157,96 @@ export const CRMAdminPanel: React.FC<CRMAdminPanelProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF8FB] text-[#120F13] flex flex-col font-['Montserrat',sans-serif]">
+    <div className="min-h-screen bg-[#FAF8FB] text-[#120F13] flex flex-col font-['Montserrat',sans-serif] w-full max-w-full overflow-x-hidden">
       {/* Top CRM App Bar */}
-      <header className="sticky top-0 z-30 bg-white border-b border-[#EAE5EC] shadow-xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16 gap-4">
+      <header className="sticky top-0 z-30 bg-white border-b border-[#EAE5EC] shadow-xs w-full max-w-full overflow-hidden">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 w-full">
+          <div className="flex items-center justify-between h-16 gap-2 sm:gap-4">
             {/* Left: Brand & Title */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
               <button
                 onClick={onBackToLanding}
-                className="p-2 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer"
+                className="p-1.5 sm:p-2 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer shrink-0"
                 title="Volver a la landing pública"
               >
-                <ArrowLeft className="w-5 h-5" />
+                <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
 
-              <div className="flex items-center gap-2.5">
-                <span className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#BF0B57] to-[#E0407D] text-white font-extrabold text-sm flex items-center justify-center shadow-xs">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-tr from-[#BF0B57] to-[#E0407D] text-white font-extrabold text-xs sm:text-sm flex items-center justify-center shadow-xs shrink-0">
                   Y
                 </span>
-                <div>
-                  <h1 className="text-base font-extrabold text-slate-900 leading-none">
-                    CRM · Yoly Belleza & Negocio
+                <div className="min-w-0">
+                  <h1 className="text-xs sm:text-base font-extrabold text-slate-900 leading-none truncate max-w-[130px] sm:max-w-none">
+                    CRM · Yoly
                   </h1>
-                  <span className="text-[10px] text-slate-500 font-semibold">
-                    L'Bel · Ésika · Cyzone | Panel de Administración
+                  <span className="text-[9px] sm:text-[10px] text-slate-500 font-semibold truncate block max-w-[130px] sm:max-w-none">
+                    L'Bel · Ésika · Cyzone
                   </span>
                 </div>
               </div>
             </div>
 
             {/* Right: Actions & User Chip */}
-            <div className="flex items-center gap-2 sm:gap-3">
+            <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
               <button
                 onClick={() => onOpenEditModal(null)}
-                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-white bg-[#BF0B57] hover:bg-[#a00949] shadow-xs transition-all cursor-pointer"
+                className="inline-flex items-center gap-1 p-2 sm:px-3 sm:py-2 rounded-xl text-xs font-bold text-white bg-[#BF0B57] hover:bg-[#a00949] shadow-xs transition-all cursor-pointer"
+                title="Nuevo Contacto"
               >
                 <Plus className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Nuevo Contacto</span>
+                <span className="hidden sm:inline">Nuevo</span>
               </button>
 
               <button
                 onClick={onOpenTemplateManager}
-                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1 p-2 sm:px-3 sm:py-2 rounded-xl text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors cursor-pointer"
                 title="Ver y editar plantillas de WhatsApp y Gmail"
               >
                 <FileText className="w-3.5 h-3.5 text-[#69377D]" />
-                <span className="hidden sm:inline">Plantillas</span>
+                <span className="hidden md:inline">Plantillas</span>
               </button>
 
               <button
                 onClick={handleExportCSV}
                 disabled={leads.length === 0}
-                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 disabled:opacity-40 transition-colors cursor-pointer"
+                className="hidden sm:inline-flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 disabled:opacity-40 transition-colors cursor-pointer"
                 title="Exportar base de datos a archivo CSV"
               >
                 <Download className="w-3.5 h-3.5" />
-                <span className="hidden md:inline">Exportar Excel</span>
+                <span>CSV</span>
               </button>
 
               {/* User Avatar / Profile Chip */}
-              <div className="flex items-center gap-2 pl-2 border-l border-slate-200">
+              <div className="flex items-center gap-1.5 pl-1.5 sm:pl-2 border-l border-slate-200">
                 {currentUser?.photoURL ? (
                   <img
                     src={currentUser.photoURL}
                     alt={currentUser.displayName || 'Yoly'}
-                    className="w-8 h-8 rounded-full border border-slate-200"
+                    className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-slate-200 shrink-0"
                     referrerPolicy="no-referrer"
                   />
                 ) : (
-                  <div className="w-8 h-8 rounded-full bg-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center">
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center shrink-0">
                     {(currentUser?.displayName || currentUser?.email || 'Y')[0].toUpperCase()}
                   </div>
                 )}
 
                 <div className="hidden lg:block text-left">
-                  <div className="text-xs font-bold text-slate-900 truncate max-w-[140px]">
+                  <div className="text-xs font-bold text-slate-900 truncate max-w-[130px]">
                     {currentUser?.displayName || 'Administradora'}
                   </div>
-                  <div className="text-[10px] text-slate-500 truncate max-w-[140px]">
+                  <div className="text-[10px] text-slate-500 truncate max-w-[130px]">
                     {currentUser?.email}
                   </div>
                 </div>
 
                 <button
                   onClick={onLogout}
-                  className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer shrink-0"
                   title="Cerrar sesión de Google"
                 >
-                  <LogOut className="w-4 h-4" />
+                  <LogOut className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </button>
               </div>
             </div>
