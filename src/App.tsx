@@ -2,10 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
 import { LeadCaptureForm } from './components/LeadCaptureForm';
-import { Footer } from './components/Footer';
 import { FlyerModal } from './components/FlyerModal';
 import { LeadsManagerModal } from './components/LeadsManagerModal';
-import { WhatsAppFloatingButton } from './components/WhatsAppFloatingButton';
 import { CRMAdminPanel } from './components/CRMAdminPanel';
 import { CRMLoginView } from './components/CRMLoginView';
 import { CRMContactModal } from './components/CRMContactModal';
@@ -346,13 +344,6 @@ export default function App() {
         />
       </main>
 
-      {/* Footer */}
-      <Footer
-        onOpenLeadsModal={() => setIsLeadsModalOpen(true)}
-        onGoToAdmin={() => setCurrentView('admin')}
-        leadsCount={leads.length}
-      />
-
       {/* Full-view Flyer Modal */}
       <FlyerModal
         isOpen={isFlyerModalOpen}
@@ -368,9 +359,6 @@ export default function App() {
         onDeleteLead={handleDeleteLead}
         onClearAll={() => setLeads([])}
       />
-
-      {/* Floating WhatsApp Quick Action Button */}
-      <WhatsAppFloatingButton />
     </div>
   );
 }

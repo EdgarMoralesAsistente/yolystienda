@@ -108,8 +108,8 @@ export const Hero: React.FC<HeroProps> = ({ onScrollToForm, onOpenFlyerModal }) 
               <div className="relative bg-white p-2.5 sm:p-3 rounded-2xl shadow-xl border border-slate-200/80">
                 <div className="relative overflow-hidden rounded-xl bg-slate-100 aspect-[3/4.6]">
                   <img
-                    src="/assets/aistudio/flyer_yoly_con_nuevo_qr.jpeg"
-                    alt="Flyer Oficial de Yoly con nuevo código QR - L'Bel, Ésika, Cyzone"
+                    src="/assets/aistudio/Yoly_tienda_en_linea__1__c21b017d.png"
+                    alt="Flyer Oficial Yoly's Tienda en Línea - L'Bel, Ésika, Cyzone"
                     className="w-full h-full object-cover object-top transition duration-500 group-hover:scale-[1.02]"
                     referrerPolicy="no-referrer"
                   />
