@@ -186,8 +186,17 @@ export default function App() {
   // Navigation view: 'landing' or 'admin'
   const [currentView, setCurrentView] = useState<'landing' | 'admin'>('landing');
 
-  // Google Auth User
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  // Google Auth User (or local PIN admin session)
+  const [currentUser, setCurrentUser] = useState<User | null>(() => {
+    try {
+      const saved = localStorage.getItem('yoly_crm_session');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.email) return parsed as unknown as User;
+      }
+    } catch {}
+    return null;
+  });
 
   // Kanban Columns state
   const [columns, setColumns] = useState<KanbanColumn[]>(() => {
@@ -252,6 +261,17 @@ export default function App() {
         setCurrentUser(user);
       },
       () => {
+        // Fallback: check if user logged in via PIN
+        try {
+          const savedSession = localStorage.getItem('yoly_crm_session');
+          if (savedSession) {
+            const parsed = JSON.parse(savedSession);
+            if (parsed && parsed.email) {
+              setCurrentUser(parsed as unknown as User);
+              return;
+            }
+          }
+        } catch {}
         setCurrentUser(null);
       }
     );
@@ -480,7 +500,12 @@ export default function App() {
   };
 
   const handleLogout = async () => {
-    await logout();
+    try {
+      await logout();
+    } catch (e) {
+      console.warn('Logout error', e);
+    }
+    localStorage.removeItem('yoly_crm_session');
     setCurrentUser(null);
   };
 

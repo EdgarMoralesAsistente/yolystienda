@@ -12,7 +12,10 @@ import {
   Copy,
   Check,
   AlertCircle,
-  HelpCircle
+  HelpCircle,
+  Globe,
+  KeyRound,
+  Lock
 } from 'lucide-react';
 import { User } from 'firebase/auth';
 import { GoogleSheetsConfig } from '../lib/googleSheetsService';
@@ -49,17 +52,36 @@ export const CRMAccessManagerModal: React.FC<CRMAccessManagerModalProps> = ({
 }) => {
   if (!isOpen) return null;
 
-  const [activeTab, setActiveTab] = useState<'pasos' | 'whitelist'>('pasos');
+  const [activeTab, setActiveTab] = useState<'pasos' | 'whitelist' | 'dominios'>('pasos');
   const [authorizedEmails, setAuthorizedEmails] = useState<string[]>(() =>
     getAuthorizedEmails(currentUser?.email)
   );
   const [newEmail, setNewEmail] = useState('');
   const [copiedLink, setCopiedLink] = useState(false);
+  const [copiedDomain, setCopiedDomain] = useState(false);
+  const [currentPin, setCurrentPin] = useState(() => localStorage.getItem('yoly_crm_pin') || '2026');
+  const [newPinInput, setNewPinInput] = useState('');
   const [alertMsg, setAlertMsg] = useState<{ type: 'success' | 'error' | 'idle'; message?: string }>({
     type: 'idle'
   });
 
   const appUrl = window.location.origin;
+  const currentHostname = typeof window !== 'undefined' ? window.location.hostname : '';
+  const firebaseSettingsUrl =
+    'https://console.firebase.google.com/project/gen-lang-client-0701003609/authentication/settings';
+
+  const handleUpdatePin = (e: React.FormEvent) => {
+    e.preventDefault();
+    const clean = newPinInput.trim();
+    if (clean.length < 4) {
+      setAlertMsg({ type: 'error', message: 'El PIN debe tener al menos 4 dígitos o caracteres.' });
+      return;
+    }
+    localStorage.setItem('yoly_crm_pin', clean);
+    setCurrentPin(clean);
+    setNewPinInput('');
+    setAlertMsg({ type: 'success', message: `¡PIN de Administradora actualizado exitosamente!` });
+  };
 
   const handleAddEmail = (e: React.FormEvent) => {
     e.preventDefault();
@@ -153,6 +175,18 @@ export const CRMAccessManagerModal: React.FC<CRMAccessManagerModalProps> = ({
             }`}
           >
             2. Correos Autorizados ({authorizedEmails.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('dominios')}
+            className={`py-3 border-b-2 cursor-pointer transition-colors flex items-center gap-1.5 ${
+              activeTab === 'dominios'
+                ? 'border-[#BF0B57] text-[#BF0B57]'
+                : 'border-transparent text-slate-500 hover:text-slate-900'
+            }`}
+          >
+            <Globe className="w-3.5 h-3.5" />
+            <span>3. Dominios Vercel & PIN</span>
           </button>
         </div>
 
@@ -274,7 +308,7 @@ export const CRMAccessManagerModal: React.FC<CRMAccessManagerModalProps> = ({
                 </p>
               </div>
             </div>
-          ) : (
+          ) : activeTab === 'whitelist' ? (
             /* WHITELIST MANAGEMENT TAB */
             <div className="space-y-4">
               <div className="p-3.5 rounded-2xl bg-purple-50 border border-purple-200 text-xs text-[#69377D]">
@@ -350,6 +384,108 @@ export const CRMAccessManagerModal: React.FC<CRMAccessManagerModalProps> = ({
                     );
                   })}
                 </div>
+              </div>
+            </div>
+          ) : (
+            /* Tab 3: Dominios Autorizados & PIN */
+            <div className="space-y-4 text-xs">
+              {/* Vercel Domain Info Box */}
+              <div className="p-4 rounded-2xl bg-amber-50/70 border border-amber-200 text-slate-700 space-y-3">
+                <div className="flex items-start gap-2.5">
+                  <Globe className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                  <div>
+                    <h4 className="font-extrabold text-xs sm:text-sm text-amber-950">
+                      Dominio de Vercel y Firebase (auth/unauthorized-domain)
+                    </h4>
+                    <p className="text-[11px] text-slate-600 mt-1 leading-relaxed">
+                      Si al pulsar &quot;Iniciar sesión con Google&quot; en Vercel aparece un error de dominio no autorizado, solo debes registrar la dirección de tu web en Firebase Console.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="p-3 bg-white rounded-xl border border-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-slate-400 block">Tu dominio actual:</span>
+                    <span className="font-mono text-xs font-bold text-slate-800">{currentHostname || 'tu-proyecto.vercel.app'}</span>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (currentHostname) {
+                          navigator.clipboard.writeText(currentHostname);
+                          setCopiedDomain(true);
+                          setTimeout(() => setCopiedDomain(false), 2000);
+                        }
+                      }}
+                      className="px-3 py-1.5 rounded-lg border border-slate-300 bg-slate-50 hover:bg-slate-100 font-bold text-xs text-slate-700 inline-flex items-center gap-1.5 cursor-pointer"
+                    >
+                      {copiedDomain ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-slate-500" />}
+                      <span>{copiedDomain ? '¡Copiado!' : 'Copiar'}</span>
+                    </button>
+
+                    <a
+                      href={firebaseSettingsUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs inline-flex items-center gap-1.5 shadow-xs"
+                    >
+                      <span>Abrir Firebase</span>
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+                  </div>
+                </div>
+
+                <div className="bg-white/80 p-3 rounded-xl border border-amber-200 text-[11px] space-y-1.5">
+                  <div className="font-bold text-amber-950">Pasos rápidos en Firebase:</div>
+                  <ol className="list-decimal list-inside space-y-1 text-slate-600">
+                    <li>Haz clic en el botón <strong>&quot;Abrir Firebase&quot;</strong>.</li>
+                    <li>Baja a la sección <strong>&quot;Dominios autorizados&quot; (Authorized domains)</strong>.</li>
+                    <li>Haz clic en <strong>&quot;Agregar dominio&quot;</strong>, pega tu dominio copiado y pulsa <strong>Guardar</strong>.</li>
+                  </ol>
+                </div>
+              </div>
+
+              {/* Master PIN Settings Box */}
+              <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-xl bg-purple-100 text-[#BF0B57] flex items-center justify-center font-bold">
+                    <KeyRound className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h4 className="font-extrabold text-xs sm:text-sm text-slate-900">
+                      PIN Maestro de Administradora
+                    </h4>
+                    <p className="text-[11px] text-slate-500">
+                      Permite el acceso directo sin Google en caso de emergencias o problemas en el navegador.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200">
+                  <span className="text-xs text-slate-600">PIN actual:</span>
+                  <span className="font-mono font-bold text-sm text-[#BF0B57] bg-white px-2.5 py-1 rounded-lg border border-slate-200">
+                    {currentPin}
+                  </span>
+                </div>
+
+                <form onSubmit={handleUpdatePin} className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newPinInput}
+                    onChange={(e) => setNewPinInput(e.target.value)}
+                    placeholder="Nuevo PIN (ej: 2026, 4488)"
+                    maxLength={10}
+                    className="flex-1 px-3.5 py-2 rounded-xl border border-slate-300 focus:border-[#BF0B57] outline-none text-xs font-mono"
+                  />
+                  <button
+                    type="submit"
+                    className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs cursor-pointer"
+                  >
+                    Guardar PIN
+                  </button>
+                </form>
               </div>
             </div>
           )}
