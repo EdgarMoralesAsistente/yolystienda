@@ -6,6 +6,7 @@ interface CRMLeadEditModalProps {
   isOpen: boolean;
   onClose: () => void;
   leadToEdit: Lead | null;
+  initialColumnId?: string;
   onSaveLead: (lead: Lead) => void;
 }
 
@@ -24,6 +25,7 @@ export const CRMLeadEditModal: React.FC<CRMLeadEditModalProps> = ({
   isOpen,
   onClose,
   leadToEdit,
+  initialColumnId,
   onSaveLead
 }) => {
   if (!isOpen) return null;
@@ -97,11 +99,22 @@ export const CRMLeadEditModal: React.FC<CRMLeadEditModalProps> = ({
       interes,
       marcaFavorita,
       estado,
+      columnaId: leadToEdit ? leadToEdit.columnaId : (initialColumnId || 'col_nuevos'),
+      probabilidadConversion: leadToEdit?.probabilidadConversion ?? (interes === 'ambos' ? 65 : 45),
+      valorEstimado: leadToEdit?.valorEstimado ?? 35,
       etiquetas,
       notasPrivadas: notasPrivadas.trim(),
       mensaje: mensaje.trim(),
       fecha: leadToEdit ? leadToEdit.fecha : new Date().toISOString(),
-      origen: leadToEdit ? leadToEdit.origen : 'Registro Manual CRM'
+      origen: leadToEdit ? leadToEdit.origen : 'Registro Manual CRM',
+      historialAcciones: leadToEdit?.historialAcciones || [
+        {
+          id: 'log_' + Date.now(),
+          fecha: new Date().toISOString(),
+          tipo: 'registro',
+          descripcion: 'Lead registrado en el CRM'
+        }
+      ]
     };
 
     onSaveLead(updatedLead);

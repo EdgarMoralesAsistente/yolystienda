@@ -3,6 +3,8 @@ import { ArrowLeft, Shield, Sparkles, CheckCircle2 } from 'lucide-react';
 import { googleSignIn } from '../lib/googleAuth';
 import { User } from 'firebase/auth';
 
+import { getAuthorizedEmails } from './CRMAccessManagerModal';
+
 interface CRMLoginViewProps {
   onLoginSuccess: (user: User, token: string) => void;
   onBackToLanding: () => void;
@@ -21,6 +23,16 @@ export const CRMLoginView: React.FC<CRMLoginViewProps> = ({
     try {
       const result = await googleSignIn();
       if (result) {
+        const allowed = getAuthorizedEmails();
+        const userEmail = (result.user.email || '').toLowerCase();
+
+        if (allowed.length > 0 && !allowed.includes(userEmail)) {
+          setErrorMessage(
+            `Acceso restringido: La cuenta "${userEmail}" no está en la lista de colaboradoras autorizadas. Pide a la administradora que agregue tu correo en "Dar Acceso".`
+          );
+          return;
+        }
+
         onLoginSuccess(result.user, result.accessToken);
       }
     } catch (err: any) {

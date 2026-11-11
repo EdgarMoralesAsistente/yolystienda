@@ -18,6 +18,8 @@ const provider = new GoogleAuthProvider();
 provider.addScope('https://www.googleapis.com/auth/userinfo.email');
 provider.addScope('https://www.googleapis.com/auth/userinfo.profile');
 provider.addScope('https://www.googleapis.com/auth/gmail.send');
+provider.addScope('https://www.googleapis.com/auth/spreadsheets');
+provider.addScope('https://www.googleapis.com/auth/drive.file');
 
 // In-memory token storage (DO NOT store in localStorage per guidelines)
 let cachedAccessToken: string | null = null;
