@@ -52,6 +52,7 @@ export interface Lead {
   canalUltimoContacto?: 'whatsapp' | 'email';
   historialAcciones?: ActivityLogEntry[];
   accionesProgramadas?: ScheduledAction[];
+  syncedToSheets?: boolean;
 }
 
 export interface CRMTemplate {

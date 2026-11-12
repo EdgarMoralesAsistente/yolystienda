@@ -4,16 +4,35 @@ export interface GoogleSheetsConfig {
   spreadsheetId: string;
   spreadsheetUrl: string;
   spreadsheetTitle: string;
+  appsScriptUrl?: string;
   lastSyncedAt?: string;
 }
 
 const STORAGE_KEY = 'yoly_google_sheets_config';
+const APPS_SCRIPT_URL_KEY = 'yoly_apps_script_url';
 
 export function getSavedSheetsConfig(): GoogleSheetsConfig | null {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    return JSON.parse(raw);
+    if (!raw) {
+      // Check if we only have the apps script url
+      const scriptUrl = localStorage.getItem(APPS_SCRIPT_URL_KEY);
+      if (scriptUrl) {
+        return {
+          spreadsheetId: '',
+          spreadsheetUrl: '',
+          spreadsheetTitle: 'Google Sheets (Apps Script Webhook)',
+          appsScriptUrl: scriptUrl
+        };
+      }
+      return null;
+    }
+    const parsed: GoogleSheetsConfig = JSON.parse(raw);
+    if (!parsed.appsScriptUrl) {
+      const scriptUrl = localStorage.getItem(APPS_SCRIPT_URL_KEY);
+      if (scriptUrl) parsed.appsScriptUrl = scriptUrl;
+    }
+    return parsed;
   } catch {
     return null;
   }
@@ -22,10 +41,245 @@ export function getSavedSheetsConfig(): GoogleSheetsConfig | null {
 export function saveSheetsConfig(config: GoogleSheetsConfig | null): void {
   if (config) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
+    if (config.appsScriptUrl) {
+      localStorage.setItem(APPS_SCRIPT_URL_KEY, config.appsScriptUrl);
+    }
   } else {
     localStorage.removeItem(STORAGE_KEY);
   }
 }
+
+export function saveAppsScriptUrl(url: string): void {
+  const clean = url.trim();
+  if (clean) {
+    localStorage.setItem(APPS_SCRIPT_URL_KEY, clean);
+    const existing = getSavedSheetsConfig();
+    if (existing) {
+      existing.appsScriptUrl = clean;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(existing));
+    } else {
+      const newConfig: GoogleSheetsConfig = {
+        spreadsheetId: '',
+        spreadsheetUrl: '',
+        spreadsheetTitle: 'Google Sheets (Apps Script Webhook)',
+        appsScriptUrl: clean
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(newConfig));
+    }
+  } else {
+    localStorage.removeItem(APPS_SCRIPT_URL_KEY);
+    const existing = getSavedSheetsConfig();
+    if (existing) {
+      delete existing.appsScriptUrl;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(existing));
+    }
+  }
+}
+
+export function getSavedAppsScriptUrl(): string {
+  try {
+    const fromConfig = getSavedSheetsConfig()?.appsScriptUrl;
+    if (fromConfig) return fromConfig.trim();
+    const fromKey = localStorage.getItem(APPS_SCRIPT_URL_KEY);
+    return fromKey ? fromKey.trim() : '';
+  } catch {
+    return '';
+  }
+}
+
+/**
+ * Sends a lead directly to the Google Apps Script Web App.
+ * This works for ALL visitors (anonymous, public, mobile QR code scanners)
+ * without requiring Google login.
+ */
+export async function sendLeadToAppsScript(
+  appsScriptUrl: string,
+  lead: Lead,
+  columns?: KanbanColumn[]
+): Promise<boolean> {
+  const cleanUrl = appsScriptUrl.trim();
+  if (!cleanUrl) {
+    throw new Error('La URL de Google Apps Script está vacía.');
+  }
+
+  const colName =
+    columns && lead.columnaId
+      ? columns.find((c) => c.id === lead.columnaId)?.title || 'Nuevos en Feria'
+      : 'Nuevos en Feria';
+
+  const payload = {
+    id: lead.id,
+    fecha: lead.fecha || new Date().toISOString(),
+    nombre: lead.nombre,
+    apellido: lead.apellido,
+    whatsapp: lead.whatsapp,
+    email: lead.email,
+    interes: lead.interes,
+    marcaFavorita: lead.marcaFavorita || 'Todas las marcas',
+    columna: colName,
+    probabilidadConversion: lead.probabilidadConversion ?? 40,
+    valorEstimado: lead.valorEstimado ?? 30,
+    etiquetas: (lead.etiquetas || []).join(', '),
+    notasPrivadas: lead.notasPrivadas || '',
+    mensaje: lead.mensaje || '',
+    origen: lead.origen || 'Landing Page de Feria'
+  };
+
+  try {
+    // text/plain mode with no-cors avoids CORS preflight failures from Google Apps Script redirects
+    await fetch(cleanUrl, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: {
+        'Content-Type': 'text/plain;charset=utf-8'
+      },
+      body: JSON.stringify(payload)
+    });
+
+    return true;
+  } catch (err: any) {
+    console.error('Error enviando lead a Apps Script:', err);
+    throw new Error(err?.message || 'Error de red al conectar con Google Apps Script');
+  }
+}
+
+/**
+ * Sends a test ping to verify that the Google Apps Script Web App is reachable.
+ */
+export async function testAppsScriptWebhook(
+  appsScriptUrl: string
+): Promise<{ success: boolean; message: string }> {
+  const cleanUrl = appsScriptUrl.trim();
+  if (!cleanUrl) {
+    return { success: false, message: 'Ingresa una URL válida de Google Apps Script' };
+  }
+
+  const testLead: Lead = {
+    id: 'test_' + Date.now(),
+    nombre: 'Prueba',
+    apellido: 'Conexión Yoly',
+    whatsapp: '+51 999 000 111',
+    email: 'contacto.prueba@belcorp.com',
+    interes: 'ambos',
+    marcaFavorita: 'L’Bel / Ésika / Cyzone',
+    fecha: new Date().toISOString(),
+    origen: 'Prueba desde Panel CRM',
+    estado: 'nuevo',
+    mensaje: 'Fila de prueba automática para verificar la integración con Google Sheets.'
+  };
+
+  try {
+    await sendLeadToAppsScript(cleanUrl, testLead);
+    return {
+      success: true,
+      message: '¡Prueba enviada con éxito! Revisa tu Google Sheet en la pestaña "Leads". Verás esta fila agregada.'
+    };
+  } catch (err: any) {
+    return {
+      success: false,
+      message: err.message || 'No se pudo comunicar con Google Apps Script. Verifica la URL.'
+    };
+  }
+}
+
+export const CRM_APPS_SCRIPT_TEMPLATE = `// ================================================================
+// CÓDIGO GOOGLE APPS SCRIPT PARA TU CRM YOLY (BELCORP)
+// Pégalo en tu Google Sheet en: Extensiones -> Apps Script
+// ================================================================
+
+function doGet(e) {
+  return ContentService.createTextOutput(
+    JSON.stringify({ 
+      status: "success", 
+      message: "¡Backend CRM Yoly activo y listo para recibir leads!" 
+    })
+  ).setMimeType(ContentService.MimeType.JSON);
+}
+
+function doPost(e) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("Leads");
+    
+    // Si la pestaña "Leads" no existe, la crea automáticamente
+    if (!sheet) {
+      sheet = ss.insertSheet("Leads");
+    }
+    
+    // Si la hoja está nueva, crea y estiliza los encabezados oficiales
+    if (sheet.getLastRow() === 0) {
+      var headers = [
+        "ID",
+        "Fecha Registro",
+        "Nombre",
+        "Apellido",
+        "WhatsApp",
+        "Email",
+        "Interés",
+        "Marca Favorita",
+        "Etapa Kanban",
+        "Probabilidad %",
+        "Valor Estimado ($)",
+        "Etiquetas",
+        "Notas Privadas",
+        "Último Contacto",
+        "Canal Contacto",
+        "Mensaje Original"
+      ];
+      sheet.appendRow(headers);
+      
+      // Estilo visual elegante con el color de marca de Yoly
+      var headerRange = sheet.getRange(1, 1, 1, headers.length);
+      headerRange.setBackground("#BF0B57");
+      headerRange.setFontColor("#FFFFFF");
+      headerRange.setFontWeight("bold");
+      headerRange.setHorizontalAlignment("center");
+      sheet.setFrozenRows(1);
+    }
+    
+    // Parsea los datos enviados desde la página web
+    var data = {};
+    if (e && e.postData && e.postData.contents) {
+      try {
+        data = JSON.parse(e.postData.contents);
+      } catch(pErr) {
+        data = e.parameter || {};
+      }
+    } else if (e && e.parameter) {
+      data = e.parameter;
+    }
+    
+    var row = [
+      data.id || ("lead_" + new Date().getTime()),
+      data.fecha ? new Date(data.fecha).toLocaleString() : new Date().toLocaleString(),
+      data.nombre || "",
+      data.apellido || "",
+      data.whatsapp || "",
+      data.email || "",
+      data.interes || "comprar",
+      data.marcaFavorita || "Todas las marcas",
+      data.columna || "Nuevos en Feria",
+      data.probabilidadConversion || 45,
+      data.valorEstimado || 35,
+      data.etiquetas || "Stand Feria",
+      data.notasPrivadas || "",
+      "",
+      "",
+      data.mensaje || ""
+    ];
+    
+    sheet.appendRow(row);
+    
+    return ContentService.createTextOutput(
+      JSON.stringify({ status: "success", id: data.id })
+    ).setMimeType(ContentService.MimeType.JSON);
+    
+  } catch (err) {
+    return ContentService.createTextOutput(
+      JSON.stringify({ status: "error", error: err.toString() })
+    ).setMimeType(ContentService.MimeType.JSON);
+  }
+}`;
 
 /**
  * Creates a brand new Google Spreadsheet with 4 organized tabs:
@@ -94,6 +348,7 @@ export async function createCRMSpreadsheet(
     spreadsheetId,
     spreadsheetUrl,
     spreadsheetTitle: title,
+    appsScriptUrl: getSavedAppsScriptUrl() || undefined,
     lastSyncedAt: new Date().toISOString()
   };
 
@@ -263,7 +518,7 @@ export async function pushAllDataToSheets(
 }
 
 /**
- * Appends a newly captured lead directly to the Google Sheets without rewriting all rows
+ * Appends a newly captured lead directly to the Google Sheets using Google OAuth
  */
 export async function appendLeadToSheets(
   accessToken: string,
@@ -291,7 +546,7 @@ export async function appendLeadToSheets(
     lead.mensaje || ''
   ];
 
-  await fetch(
+  const res = await fetch(
     `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/Leads!A1:append?valueInputOption=USER_ENTERED`,
     {
       method: 'POST',
@@ -304,6 +559,11 @@ export async function appendLeadToSheets(
       })
     }
   );
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err?.error?.message || `Error al añadir lead en Google Sheets: ${res.statusText}`);
+  }
 }
 
 /**
@@ -358,7 +618,8 @@ export async function pullDataFromSheets(
         canalUltimoContacto: row[14] === 'whatsapp' || row[14] === 'email' ? row[14] : undefined,
         mensaje: row[15] || '',
         origen: 'Google Sheets Sincronizado',
-        estado: 'en_seguimiento'
+        estado: 'en_seguimiento',
+        syncedToSheets: true
       };
     });
 

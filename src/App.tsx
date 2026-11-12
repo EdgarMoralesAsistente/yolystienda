@@ -16,7 +16,13 @@ import { Lead, LeadInterest, LeadStatus, CRMTemplate, KanbanColumn } from './typ
 import { DEFAULT_CRM_TEMPLATES } from './data/crmTemplates';
 import { DEFAULT_KANBAN_COLUMNS } from './data/kanbanData';
 import { initAuth, logout, getAccessToken } from './lib/googleAuth';
-import { GoogleSheetsConfig, getSavedSheetsConfig, appendLeadToSheets } from './lib/googleSheetsService';
+import {
+  GoogleSheetsConfig,
+  getSavedSheetsConfig,
+  appendLeadToSheets,
+  sendLeadToAppsScript,
+  getSavedAppsScriptUrl
+} from './lib/googleSheetsService';
 import { User } from 'firebase/auth';
 
 const INITIAL_DEMO_LEADS: Lead[] = [
@@ -329,13 +335,14 @@ export default function App() {
   };
 
   // Lead Actions
-  const handleLeadAdded = (newLead: Lead) => {
+  const handleLeadAdded = async (newLead: Lead) => {
     // Ensure lead has default Kanban column and initial probability
     const fullLead: Lead = {
       ...newLead,
       columnaId: columns[0]?.id || 'col_nuevos',
       probabilidadConversion: newLead.interes === 'ambos' ? 60 : 45,
       valorEstimado: newLead.interes === 'vender' ? 100 : 35,
+      syncedToSheets: false,
       historialAcciones: [
         {
           id: 'log_' + Date.now(),
@@ -345,13 +352,39 @@ export default function App() {
         }
       ]
     };
+
     setLeads((prev) => [fullLead, ...prev]);
 
-    // Background append to Google Sheets if connected
-    const token = getAccessToken();
-    if (sheetsConfig && token) {
-      appendLeadToSheets(token, sheetsConfig.spreadsheetId, fullLead, columns).catch((err) =>
-        console.warn('Auto-sync to Google Sheets failed:', err)
+    // Dual background sync to Google Sheets:
+    // 1. Google Apps Script Webhook (Works for all public visitors without authentication)
+    const activeAppsScriptUrl = sheetsConfig?.appsScriptUrl || getSavedAppsScriptUrl();
+    let synced = false;
+
+    if (activeAppsScriptUrl) {
+      try {
+        await sendLeadToAppsScript(activeAppsScriptUrl, fullLead, columns);
+        synced = true;
+      } catch (err) {
+        console.warn('Google Apps Script auto-sync failed:', err);
+      }
+    }
+
+    // 2. Direct Google Sheets API (When admin has active OAuth token)
+    if (!synced) {
+      const token = getAccessToken();
+      if (sheetsConfig?.spreadsheetId && token) {
+        try {
+          await appendLeadToSheets(token, sheetsConfig.spreadsheetId, fullLead, columns);
+          synced = true;
+        } catch (err) {
+          console.warn('Direct Google Sheets API auto-sync failed:', err);
+        }
+      }
+    }
+
+    if (synced) {
+      setLeads((prev) =>
+        prev.map((l) => (l.id === fullLead.id ? { ...l, syncedToSheets: true } : l))
       );
     }
   };
